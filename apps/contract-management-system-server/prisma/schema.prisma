@@ -1,0 +1,137 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DB_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Contract {
+  contractApprovals    ContractApproval[]
+  contractPerformances ContractPerformance[]
+  contractQueries      ContractQuery[]
+  contractReminders    ContractReminder[]
+  contractVersions     ContractVersion[]
+  createdAt            DateTime              @default(now())
+  description          String?
+  id                   String                @id @default(cuid())
+  status               EnumContractStatus?
+  template             String?
+  title                String?
+  updatedAt            DateTime              @updatedAt
+  version              String?
+}
+
+model Integration {
+  apiEndpoint     String?
+  createdAt       DateTime  @default(now())
+  id              String    @id @default(cuid())
+  integrationDate DateTime?
+  systemName      String?
+  updatedAt       DateTime  @updatedAt
+}
+
+model ContractQuery {
+  contract   Contract?                   @relation(fields: [contractId], references: [id])
+  contractId String?
+  createdAt  DateTime                    @default(now())
+  criteria   String?
+  id         String                      @id @default(cuid())
+  queryDate  DateTime?
+  queryType  EnumContractQueryQueryType?
+  updatedAt  DateTime                    @updatedAt
+}
+
+model ContractReminder {
+  contract     Contract? @relation(fields: [contractId], references: [id])
+  contractId   String?
+  createdAt    DateTime  @default(now())
+  id           String    @id @default(cuid())
+  message      String?
+  reminderDate DateTime?
+  updatedAt    DateTime  @updatedAt
+}
+
+model ContractReport {
+  content       String?
+  createdAt     DateTime                  @default(now())
+  format        EnumContractReportFormat?
+  generatedDate DateTime?
+  id            String                    @id @default(cuid())
+  reportName    String?
+  updatedAt     DateTime                  @updatedAt
+}
+
+model ContractVersion {
+  changes          String?
+  contract         Contract? @relation(fields: [contractId], references: [id])
+  contractId       String?
+  createdAt        DateTime  @default(now())
+  id               String    @id @default(cuid())
+  modificationDate DateTime?
+  updatedAt        DateTime  @updatedAt
+  versionNumber    Int?
+}
+
+model ContractTemplate {
+  content   String?
+  createdAt DateTime @default(now())
+  id        String   @id @default(cuid())
+  name      String?
+  updatedAt DateTime @updatedAt
+}
+
+model ContractPerformance {
+  contract     Contract?                      @relation(fields: [contractId], references: [id])
+  contractId   String?
+  createdAt    DateTime                       @default(now())
+  id           String                         @id @default(cuid())
+  milestone    String?
+  recordedDate DateTime?
+  status       EnumContractPerformanceStatus?
+  updatedAt    DateTime                       @updatedAt
+}
+
+model ContractApproval {
+  approvalDate DateTime?
+  approver     String?
+  contract     Contract?                   @relation(fields: [contractId], references: [id])
+  contractId   String?
+  createdAt    DateTime                    @default(now())
+  id           String                      @id @default(cuid())
+  status       EnumContractApprovalStatus?
+  updatedAt    DateTime                    @updatedAt
+}
+
+model User {
+  createdAt DateTime @default(now())
+  email     String?  @unique
+  firstName String?
+  id        String   @id @default(cuid())
+  lastName  String?
+  password  String
+  roles     Json
+  updatedAt DateTime @updatedAt
+  username  String   @unique
+}
+
+enum EnumContractStatus {
+  Option1
+}
+
+enum EnumContractQueryQueryType {
+  Option1
+}
+
+enum EnumContractReportFormat {
+  Option1
+}
+
+enum EnumContractPerformanceStatus {
+  Option1
+}
+
+enum EnumContractApprovalStatus {
+  Option1
+}
