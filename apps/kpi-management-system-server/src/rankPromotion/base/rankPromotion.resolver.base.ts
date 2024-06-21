@@ -13,20 +13,36 @@ import * as graphql from "@nestjs/graphql";
 import { GraphQLError } from "graphql";
 import { isRecordNotFoundError } from "../../prisma.util";
 import { MetaQueryPayload } from "../../util/MetaQueryPayload";
+import * as nestAccessControl from "nest-access-control";
+import * as gqlACGuard from "../../auth/gqlAC.guard";
+import { GqlDefaultAuthGuard } from "../../auth/gqlDefaultAuth.guard";
+import * as common from "@nestjs/common";
+import { AclFilterResponseInterceptor } from "../../interceptors/aclFilterResponse.interceptor";
+import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateRequest.interceptor";
 import { RankPromotion } from "./RankPromotion";
 import { RankPromotionCountArgs } from "./RankPromotionCountArgs";
-import { RankPromotionFindManyArgs } from "./RankPromotionFindManyArgs";
 import { Query } from "../../query/base/Query";
+import { RankPromotionFindManyArgs } from "./RankPromotionFindManyArgs";
 import { RankPromotionFindUniqueArgs } from "./RankPromotionFindUniqueArgs";
 import { CreateRankPromotionArgs } from "./CreateRankPromotionArgs";
 import { UpdateRankPromotionArgs } from "./UpdateRankPromotionArgs";
 import { DeleteRankPromotionArgs } from "./DeleteRankPromotionArgs";
 import { Rank } from "../../rank/base/Rank";
 import { RankPromotionService } from "../rankPromotion.service";
+@common.UseGuards(GqlDefaultAuthGuard, gqlACGuard.GqlACGuard)
 @graphql.Resolver(() => RankPromotion)
 export class RankPromotionResolverBase {
-  constructor(protected readonly service: RankPromotionService) {}
+  constructor(
+    protected readonly service: RankPromotionService,
+    protected readonly rolesBuilder: nestAccessControl.RolesBuilder
+  ) {}
 
+  @graphql.Query(() => MetaQueryPayload)
+  @nestAccessControl.UseRoles({
+    resource: "RankPromotion",
+    action: "read",
+    possession: "any",
+  })
   async _rankPromotionsMeta(
     @graphql.Args() args: RankPromotionCountArgs
   ): Promise<MetaQueryPayload> {
@@ -36,14 +52,26 @@ export class RankPromotionResolverBase {
     };
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @graphql.Query(() => [RankPromotion])
+  @nestAccessControl.UseRoles({
+    resource: "RankPromotion",
+    action: "read",
+    possession: "any",
+  })
   async rankPromotions(
     @graphql.Args() args: RankPromotionFindManyArgs
   ): Promise<RankPromotion[]> {
     return this.service.rankPromotions(args);
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @graphql.Query(() => RankPromotion, { nullable: true })
+  @nestAccessControl.UseRoles({
+    resource: "RankPromotion",
+    action: "read",
+    possession: "own",
+  })
   async rankPromotion(
     @graphql.Args() args: RankPromotionFindUniqueArgs
   ): Promise<RankPromotion | null> {
@@ -54,7 +82,13 @@ export class RankPromotionResolverBase {
     return result;
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @graphql.Mutation(() => RankPromotion)
+  @nestAccessControl.UseRoles({
+    resource: "RankPromotion",
+    action: "create",
+    possession: "any",
+  })
   async createRankPromotion(
     @graphql.Args() args: CreateRankPromotionArgs
   ): Promise<RankPromotion> {
@@ -72,7 +106,13 @@ export class RankPromotionResolverBase {
     });
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @graphql.Mutation(() => RankPromotion)
+  @nestAccessControl.UseRoles({
+    resource: "RankPromotion",
+    action: "update",
+    possession: "any",
+  })
   async updateRankPromotion(
     @graphql.Args() args: UpdateRankPromotionArgs
   ): Promise<RankPromotion | null> {
@@ -100,6 +140,11 @@ export class RankPromotionResolverBase {
   }
 
   @graphql.Mutation(() => RankPromotion)
+  @nestAccessControl.UseRoles({
+    resource: "RankPromotion",
+    action: "delete",
+    possession: "any",
+  })
   async deleteRankPromotion(
     @graphql.Args() args: DeleteRankPromotionArgs
   ): Promise<RankPromotion | null> {
@@ -115,9 +160,15 @@ export class RankPromotionResolverBase {
     }
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @graphql.ResolveField(() => Rank, {
     nullable: true,
     name: "rank",
+  })
+  @nestAccessControl.UseRoles({
+    resource: "Rank",
+    action: "read",
+    possession: "any",
   })
   async getRank(@graphql.Parent() parent: RankPromotion): Promise<Rank | null> {
     const result = await this.service.getRank(parent.id);

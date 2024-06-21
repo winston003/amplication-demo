@@ -16,7 +16,11 @@ import * as errors from "../../errors";
 import { Request } from "express";
 import { plainToClass } from "class-transformer";
 import { ApiNestedQuery } from "../../decorators/api-nested-query.decorator";
+import * as nestAccessControl from "nest-access-control";
+import * as defaultAuthGuard from "../../auth/defaultAuth.guard";
 import { RankService } from "../rank.service";
+import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateRequest.interceptor";
+import { AclFilterResponseInterceptor } from "../../interceptors/aclFilterResponse.interceptor";
 import { RankCreateInput } from "./RankCreateInput";
 import { Rank } from "./Rank";
 import { RankFindManyArgs } from "./RankFindManyArgs";
@@ -29,10 +33,24 @@ import { RankPromotionFindManyArgs } from "../../rankPromotion/base/RankPromotio
 import { RankPromotion } from "../../rankPromotion/base/RankPromotion";
 import { RankPromotionWhereUniqueInput } from "../../rankPromotion/base/RankPromotionWhereUniqueInput";
 
+@swagger.ApiBearerAuth()
+@common.UseGuards(defaultAuthGuard.DefaultAuthGuard, nestAccessControl.ACGuard)
 export class RankControllerBase {
-  constructor(protected readonly service: RankService) {}
+  constructor(
+    protected readonly service: RankService,
+    protected readonly rolesBuilder: nestAccessControl.RolesBuilder
+  ) {}
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Post()
   @swagger.ApiCreatedResponse({ type: Rank })
+  @nestAccessControl.UseRoles({
+    resource: "Rank",
+    action: "create",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async createRank(@common.Body() data: RankCreateInput): Promise<Rank> {
     return await this.service.createRank({
       data: data,
@@ -47,9 +65,18 @@ export class RankControllerBase {
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get()
   @swagger.ApiOkResponse({ type: [Rank] })
   @ApiNestedQuery(RankFindManyArgs)
+  @nestAccessControl.UseRoles({
+    resource: "Rank",
+    action: "read",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async ranks(@common.Req() request: Request): Promise<Rank[]> {
     const args = plainToClass(RankFindManyArgs, request.query);
     return this.service.ranks({
@@ -65,9 +92,18 @@ export class RankControllerBase {
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get("/:id")
   @swagger.ApiOkResponse({ type: Rank })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "Rank",
+    action: "read",
+    possession: "own",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async rank(
     @common.Param() params: RankWhereUniqueInput
   ): Promise<Rank | null> {
@@ -90,9 +126,18 @@ export class RankControllerBase {
     return result;
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Patch("/:id")
   @swagger.ApiOkResponse({ type: Rank })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "Rank",
+    action: "update",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async updateRank(
     @common.Param() params: RankWhereUniqueInput,
     @common.Body() data: RankUpdateInput
@@ -123,6 +168,14 @@ export class RankControllerBase {
   @common.Delete("/:id")
   @swagger.ApiOkResponse({ type: Rank })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "Rank",
+    action: "delete",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async deleteRank(
     @common.Param() params: RankWhereUniqueInput
   ): Promise<Rank | null> {
@@ -148,8 +201,14 @@ export class RankControllerBase {
     }
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get("/:id/rankAdjustments")
   @ApiNestedQuery(RankAdjustmentFindManyArgs)
+  @nestAccessControl.UseRoles({
+    resource: "RankAdjustment",
+    action: "read",
+    possession: "any",
+  })
   async findRankAdjustments(
     @common.Req() request: Request,
     @common.Param() params: RankWhereUniqueInput
@@ -181,6 +240,11 @@ export class RankControllerBase {
   }
 
   @common.Post("/:id/rankAdjustments")
+  @nestAccessControl.UseRoles({
+    resource: "Rank",
+    action: "update",
+    possession: "any",
+  })
   async connectRankAdjustments(
     @common.Param() params: RankWhereUniqueInput,
     @common.Body() body: RankAdjustmentWhereUniqueInput[]
@@ -198,6 +262,11 @@ export class RankControllerBase {
   }
 
   @common.Patch("/:id/rankAdjustments")
+  @nestAccessControl.UseRoles({
+    resource: "Rank",
+    action: "update",
+    possession: "any",
+  })
   async updateRankAdjustments(
     @common.Param() params: RankWhereUniqueInput,
     @common.Body() body: RankAdjustmentWhereUniqueInput[]
@@ -215,6 +284,11 @@ export class RankControllerBase {
   }
 
   @common.Delete("/:id/rankAdjustments")
+  @nestAccessControl.UseRoles({
+    resource: "Rank",
+    action: "update",
+    possession: "any",
+  })
   async disconnectRankAdjustments(
     @common.Param() params: RankWhereUniqueInput,
     @common.Body() body: RankAdjustmentWhereUniqueInput[]
@@ -231,8 +305,14 @@ export class RankControllerBase {
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get("/:id/rankPromotions")
   @ApiNestedQuery(RankPromotionFindManyArgs)
+  @nestAccessControl.UseRoles({
+    resource: "RankPromotion",
+    action: "read",
+    possession: "any",
+  })
   async findRankPromotions(
     @common.Req() request: Request,
     @common.Param() params: RankWhereUniqueInput
@@ -266,6 +346,11 @@ export class RankControllerBase {
   }
 
   @common.Post("/:id/rankPromotions")
+  @nestAccessControl.UseRoles({
+    resource: "Rank",
+    action: "update",
+    possession: "any",
+  })
   async connectRankPromotions(
     @common.Param() params: RankWhereUniqueInput,
     @common.Body() body: RankPromotionWhereUniqueInput[]
@@ -283,6 +368,11 @@ export class RankControllerBase {
   }
 
   @common.Patch("/:id/rankPromotions")
+  @nestAccessControl.UseRoles({
+    resource: "Rank",
+    action: "update",
+    possession: "any",
+  })
   async updateRankPromotions(
     @common.Param() params: RankWhereUniqueInput,
     @common.Body() body: RankPromotionWhereUniqueInput[]
@@ -300,6 +390,11 @@ export class RankControllerBase {
   }
 
   @common.Delete("/:id/rankPromotions")
+  @nestAccessControl.UseRoles({
+    resource: "Rank",
+    action: "update",
+    possession: "any",
+  })
   async disconnectRankPromotions(
     @common.Param() params: RankWhereUniqueInput,
     @common.Body() body: RankPromotionWhereUniqueInput[]

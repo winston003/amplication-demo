@@ -13,19 +13,35 @@ import * as graphql from "@nestjs/graphql";
 import { GraphQLError } from "graphql";
 import { isRecordNotFoundError } from "../../prisma.util";
 import { MetaQueryPayload } from "../../util/MetaQueryPayload";
+import * as nestAccessControl from "nest-access-control";
+import * as gqlACGuard from "../../auth/gqlAC.guard";
+import { GqlDefaultAuthGuard } from "../../auth/gqlDefaultAuth.guard";
+import * as common from "@nestjs/common";
+import { AclFilterResponseInterceptor } from "../../interceptors/aclFilterResponse.interceptor";
+import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateRequest.interceptor";
 import { KpiClassification } from "./KpiClassification";
 import { KpiClassificationCountArgs } from "./KpiClassificationCountArgs";
-import { KpiClassificationFindManyArgs } from "./KpiClassificationFindManyArgs";
 import { Query } from "../../query/base/Query";
+import { KpiClassificationFindManyArgs } from "./KpiClassificationFindManyArgs";
 import { KpiClassificationFindUniqueArgs } from "./KpiClassificationFindUniqueArgs";
 import { CreateKpiClassificationArgs } from "./CreateKpiClassificationArgs";
 import { UpdateKpiClassificationArgs } from "./UpdateKpiClassificationArgs";
 import { DeleteKpiClassificationArgs } from "./DeleteKpiClassificationArgs";
 import { KpiClassificationService } from "../kpiClassification.service";
+@common.UseGuards(GqlDefaultAuthGuard, gqlACGuard.GqlACGuard)
 @graphql.Resolver(() => KpiClassification)
 export class KpiClassificationResolverBase {
-  constructor(protected readonly service: KpiClassificationService) {}
+  constructor(
+    protected readonly service: KpiClassificationService,
+    protected readonly rolesBuilder: nestAccessControl.RolesBuilder
+  ) {}
 
+  @graphql.Query(() => MetaQueryPayload)
+  @nestAccessControl.UseRoles({
+    resource: "KpiClassification",
+    action: "read",
+    possession: "any",
+  })
   async _kpiClassificationsMeta(
     @graphql.Args() args: KpiClassificationCountArgs
   ): Promise<MetaQueryPayload> {
@@ -35,14 +51,26 @@ export class KpiClassificationResolverBase {
     };
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @graphql.Query(() => [KpiClassification])
+  @nestAccessControl.UseRoles({
+    resource: "KpiClassification",
+    action: "read",
+    possession: "any",
+  })
   async kpiClassifications(
     @graphql.Args() args: KpiClassificationFindManyArgs
   ): Promise<KpiClassification[]> {
     return this.service.kpiClassifications(args);
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @graphql.Query(() => KpiClassification, { nullable: true })
+  @nestAccessControl.UseRoles({
+    resource: "KpiClassification",
+    action: "read",
+    possession: "own",
+  })
   async kpiClassification(
     @graphql.Args() args: KpiClassificationFindUniqueArgs
   ): Promise<KpiClassification | null> {
@@ -53,7 +81,13 @@ export class KpiClassificationResolverBase {
     return result;
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @graphql.Mutation(() => KpiClassification)
+  @nestAccessControl.UseRoles({
+    resource: "KpiClassification",
+    action: "create",
+    possession: "any",
+  })
   async createKpiClassification(
     @graphql.Args() args: CreateKpiClassificationArgs
   ): Promise<KpiClassification> {
@@ -63,7 +97,13 @@ export class KpiClassificationResolverBase {
     });
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @graphql.Mutation(() => KpiClassification)
+  @nestAccessControl.UseRoles({
+    resource: "KpiClassification",
+    action: "update",
+    possession: "any",
+  })
   async updateKpiClassification(
     @graphql.Args() args: UpdateKpiClassificationArgs
   ): Promise<KpiClassification | null> {
@@ -83,6 +123,11 @@ export class KpiClassificationResolverBase {
   }
 
   @graphql.Mutation(() => KpiClassification)
+  @nestAccessControl.UseRoles({
+    resource: "KpiClassification",
+    action: "delete",
+    possession: "any",
+  })
   async deleteKpiClassification(
     @graphql.Args() args: DeleteKpiClassificationArgs
   ): Promise<KpiClassification | null> {

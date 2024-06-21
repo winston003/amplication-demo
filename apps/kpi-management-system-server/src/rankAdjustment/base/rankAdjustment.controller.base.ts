@@ -16,17 +16,35 @@ import * as errors from "../../errors";
 import { Request } from "express";
 import { plainToClass } from "class-transformer";
 import { ApiNestedQuery } from "../../decorators/api-nested-query.decorator";
+import * as nestAccessControl from "nest-access-control";
+import * as defaultAuthGuard from "../../auth/defaultAuth.guard";
 import { RankAdjustmentService } from "../rankAdjustment.service";
+import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateRequest.interceptor";
+import { AclFilterResponseInterceptor } from "../../interceptors/aclFilterResponse.interceptor";
 import { RankAdjustmentCreateInput } from "./RankAdjustmentCreateInput";
 import { RankAdjustment } from "./RankAdjustment";
 import { RankAdjustmentFindManyArgs } from "./RankAdjustmentFindManyArgs";
 import { RankAdjustmentWhereUniqueInput } from "./RankAdjustmentWhereUniqueInput";
 import { RankAdjustmentUpdateInput } from "./RankAdjustmentUpdateInput";
 
+@swagger.ApiBearerAuth()
+@common.UseGuards(defaultAuthGuard.DefaultAuthGuard, nestAccessControl.ACGuard)
 export class RankAdjustmentControllerBase {
-  constructor(protected readonly service: RankAdjustmentService) {}
+  constructor(
+    protected readonly service: RankAdjustmentService,
+    protected readonly rolesBuilder: nestAccessControl.RolesBuilder
+  ) {}
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Post()
   @swagger.ApiCreatedResponse({ type: RankAdjustment })
+  @nestAccessControl.UseRoles({
+    resource: "RankAdjustment",
+    action: "create",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async createRankAdjustment(
     @common.Body() data: RankAdjustmentCreateInput
   ): Promise<RankAdjustment> {
@@ -57,9 +75,18 @@ export class RankAdjustmentControllerBase {
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get()
   @swagger.ApiOkResponse({ type: [RankAdjustment] })
   @ApiNestedQuery(RankAdjustmentFindManyArgs)
+  @nestAccessControl.UseRoles({
+    resource: "RankAdjustment",
+    action: "read",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async rankAdjustments(
     @common.Req() request: Request
   ): Promise<RankAdjustment[]> {
@@ -83,9 +110,18 @@ export class RankAdjustmentControllerBase {
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get("/:id")
   @swagger.ApiOkResponse({ type: RankAdjustment })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "RankAdjustment",
+    action: "read",
+    possession: "own",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async rankAdjustment(
     @common.Param() params: RankAdjustmentWhereUniqueInput
   ): Promise<RankAdjustment | null> {
@@ -114,9 +150,18 @@ export class RankAdjustmentControllerBase {
     return result;
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Patch("/:id")
   @swagger.ApiOkResponse({ type: RankAdjustment })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "RankAdjustment",
+    action: "update",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async updateRankAdjustment(
     @common.Param() params: RankAdjustmentWhereUniqueInput,
     @common.Body() data: RankAdjustmentUpdateInput
@@ -161,6 +206,14 @@ export class RankAdjustmentControllerBase {
   @common.Delete("/:id")
   @swagger.ApiOkResponse({ type: RankAdjustment })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "RankAdjustment",
+    action: "delete",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async deleteRankAdjustment(
     @common.Param() params: RankAdjustmentWhereUniqueInput
   ): Promise<RankAdjustment | null> {

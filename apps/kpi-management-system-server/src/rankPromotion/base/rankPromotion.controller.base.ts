@@ -16,17 +16,35 @@ import * as errors from "../../errors";
 import { Request } from "express";
 import { plainToClass } from "class-transformer";
 import { ApiNestedQuery } from "../../decorators/api-nested-query.decorator";
+import * as nestAccessControl from "nest-access-control";
+import * as defaultAuthGuard from "../../auth/defaultAuth.guard";
 import { RankPromotionService } from "../rankPromotion.service";
+import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateRequest.interceptor";
+import { AclFilterResponseInterceptor } from "../../interceptors/aclFilterResponse.interceptor";
 import { RankPromotionCreateInput } from "./RankPromotionCreateInput";
 import { RankPromotion } from "./RankPromotion";
 import { RankPromotionFindManyArgs } from "./RankPromotionFindManyArgs";
 import { RankPromotionWhereUniqueInput } from "./RankPromotionWhereUniqueInput";
 import { RankPromotionUpdateInput } from "./RankPromotionUpdateInput";
 
+@swagger.ApiBearerAuth()
+@common.UseGuards(defaultAuthGuard.DefaultAuthGuard, nestAccessControl.ACGuard)
 export class RankPromotionControllerBase {
-  constructor(protected readonly service: RankPromotionService) {}
+  constructor(
+    protected readonly service: RankPromotionService,
+    protected readonly rolesBuilder: nestAccessControl.RolesBuilder
+  ) {}
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Post()
   @swagger.ApiCreatedResponse({ type: RankPromotion })
+  @nestAccessControl.UseRoles({
+    resource: "RankPromotion",
+    action: "create",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async createRankPromotion(
     @common.Body() data: RankPromotionCreateInput
   ): Promise<RankPromotion> {
@@ -59,9 +77,18 @@ export class RankPromotionControllerBase {
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get()
   @swagger.ApiOkResponse({ type: [RankPromotion] })
   @ApiNestedQuery(RankPromotionFindManyArgs)
+  @nestAccessControl.UseRoles({
+    resource: "RankPromotion",
+    action: "read",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async rankPromotions(
     @common.Req() request: Request
   ): Promise<RankPromotion[]> {
@@ -87,9 +114,18 @@ export class RankPromotionControllerBase {
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get("/:id")
   @swagger.ApiOkResponse({ type: RankPromotion })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "RankPromotion",
+    action: "read",
+    possession: "own",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async rankPromotion(
     @common.Param() params: RankPromotionWhereUniqueInput
   ): Promise<RankPromotion | null> {
@@ -120,9 +156,18 @@ export class RankPromotionControllerBase {
     return result;
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Patch("/:id")
   @swagger.ApiOkResponse({ type: RankPromotion })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "RankPromotion",
+    action: "update",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async updateRankPromotion(
     @common.Param() params: RankPromotionWhereUniqueInput,
     @common.Body() data: RankPromotionUpdateInput
@@ -169,6 +214,14 @@ export class RankPromotionControllerBase {
   @common.Delete("/:id")
   @swagger.ApiOkResponse({ type: RankPromotion })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "RankPromotion",
+    action: "delete",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async deleteRankPromotion(
     @common.Param() params: RankPromotionWhereUniqueInput
   ): Promise<RankPromotion | null> {

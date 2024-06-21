@@ -16,17 +16,35 @@ import * as errors from "../../errors";
 import { Request } from "express";
 import { plainToClass } from "class-transformer";
 import { ApiNestedQuery } from "../../decorators/api-nested-query.decorator";
+import * as nestAccessControl from "nest-access-control";
+import * as defaultAuthGuard from "../../auth/defaultAuth.guard";
 import { QueryService } from "../query.service";
+import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateRequest.interceptor";
+import { AclFilterResponseInterceptor } from "../../interceptors/aclFilterResponse.interceptor";
 import { QueryCreateInput } from "./QueryCreateInput";
 import { Query } from "./Query";
 import { QueryFindManyArgs } from "./QueryFindManyArgs";
 import { QueryWhereUniqueInput } from "./QueryWhereUniqueInput";
 import { QueryUpdateInput } from "./QueryUpdateInput";
 
+@swagger.ApiBearerAuth()
+@common.UseGuards(defaultAuthGuard.DefaultAuthGuard, nestAccessControl.ACGuard)
 export class QueryControllerBase {
-  constructor(protected readonly service: QueryService) {}
+  constructor(
+    protected readonly service: QueryService,
+    protected readonly rolesBuilder: nestAccessControl.RolesBuilder
+  ) {}
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Post()
   @swagger.ApiCreatedResponse({ type: Query })
+  @nestAccessControl.UseRoles({
+    resource: "Query",
+    action: "create",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async createQuery(@common.Body() data: QueryCreateInput): Promise<Query> {
     return await this.service.createQuery({
       data: {
@@ -55,9 +73,18 @@ export class QueryControllerBase {
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get()
   @swagger.ApiOkResponse({ type: [Query] })
   @ApiNestedQuery(QueryFindManyArgs)
+  @nestAccessControl.UseRoles({
+    resource: "Query",
+    action: "read",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async queries(@common.Req() request: Request): Promise<Query[]> {
     const args = plainToClass(QueryFindManyArgs, request.query);
     return this.service.queries({
@@ -79,9 +106,18 @@ export class QueryControllerBase {
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get("/:id")
   @swagger.ApiOkResponse({ type: Query })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "Query",
+    action: "read",
+    possession: "own",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async query(
     @common.Param() params: QueryWhereUniqueInput
   ): Promise<Query | null> {
@@ -110,9 +146,18 @@ export class QueryControllerBase {
     return result;
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Patch("/:id")
   @swagger.ApiOkResponse({ type: Query })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "Query",
+    action: "update",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async updateQuery(
     @common.Param() params: QueryWhereUniqueInput,
     @common.Body() data: QueryUpdateInput
@@ -157,6 +202,14 @@ export class QueryControllerBase {
   @common.Delete("/:id")
   @swagger.ApiOkResponse({ type: Query })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "Query",
+    action: "delete",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async deleteQuery(
     @common.Param() params: QueryWhereUniqueInput
   ): Promise<Query | null> {

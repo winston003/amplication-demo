@@ -16,17 +16,35 @@ import * as errors from "../../errors";
 import { Request } from "express";
 import { plainToClass } from "class-transformer";
 import { ApiNestedQuery } from "../../decorators/api-nested-query.decorator";
+import * as nestAccessControl from "nest-access-control";
+import * as defaultAuthGuard from "../../auth/defaultAuth.guard";
 import { KpiService } from "../kpi.service";
+import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateRequest.interceptor";
+import { AclFilterResponseInterceptor } from "../../interceptors/aclFilterResponse.interceptor";
 import { KpiCreateInput } from "./KpiCreateInput";
 import { Kpi } from "./Kpi";
 import { KpiFindManyArgs } from "./KpiFindManyArgs";
 import { KpiWhereUniqueInput } from "./KpiWhereUniqueInput";
 import { KpiUpdateInput } from "./KpiUpdateInput";
 
+@swagger.ApiBearerAuth()
+@common.UseGuards(defaultAuthGuard.DefaultAuthGuard, nestAccessControl.ACGuard)
 export class KpiControllerBase {
-  constructor(protected readonly service: KpiService) {}
+  constructor(
+    protected readonly service: KpiService,
+    protected readonly rolesBuilder: nestAccessControl.RolesBuilder
+  ) {}
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Post()
   @swagger.ApiCreatedResponse({ type: Kpi })
+  @nestAccessControl.UseRoles({
+    resource: "Kpi",
+    action: "create",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async createKpi(@common.Body() data: KpiCreateInput): Promise<Kpi> {
     return await this.service.createKpi({
       data: data,
@@ -43,9 +61,18 @@ export class KpiControllerBase {
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get()
   @swagger.ApiOkResponse({ type: [Kpi] })
   @ApiNestedQuery(KpiFindManyArgs)
+  @nestAccessControl.UseRoles({
+    resource: "Kpi",
+    action: "read",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async kpis(@common.Req() request: Request): Promise<Kpi[]> {
     const args = plainToClass(KpiFindManyArgs, request.query);
     return this.service.kpis({
@@ -63,9 +90,18 @@ export class KpiControllerBase {
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get("/:id")
   @swagger.ApiOkResponse({ type: Kpi })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "Kpi",
+    action: "read",
+    possession: "own",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async kpi(@common.Param() params: KpiWhereUniqueInput): Promise<Kpi | null> {
     const result = await this.service.kpi({
       where: params,
@@ -88,9 +124,18 @@ export class KpiControllerBase {
     return result;
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Patch("/:id")
   @swagger.ApiOkResponse({ type: Kpi })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "Kpi",
+    action: "update",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async updateKpi(
     @common.Param() params: KpiWhereUniqueInput,
     @common.Body() data: KpiUpdateInput
@@ -123,6 +168,14 @@ export class KpiControllerBase {
   @common.Delete("/:id")
   @swagger.ApiOkResponse({ type: Kpi })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "Kpi",
+    action: "delete",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async deleteKpi(
     @common.Param() params: KpiWhereUniqueInput
   ): Promise<Kpi | null> {

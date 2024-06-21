@@ -16,17 +16,35 @@ import * as errors from "../../errors";
 import { Request } from "express";
 import { plainToClass } from "class-transformer";
 import { ApiNestedQuery } from "../../decorators/api-nested-query.decorator";
+import * as nestAccessControl from "nest-access-control";
+import * as defaultAuthGuard from "../../auth/defaultAuth.guard";
 import { KpiClassificationService } from "../kpiClassification.service";
+import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateRequest.interceptor";
+import { AclFilterResponseInterceptor } from "../../interceptors/aclFilterResponse.interceptor";
 import { KpiClassificationCreateInput } from "./KpiClassificationCreateInput";
 import { KpiClassification } from "./KpiClassification";
 import { KpiClassificationFindManyArgs } from "./KpiClassificationFindManyArgs";
 import { KpiClassificationWhereUniqueInput } from "./KpiClassificationWhereUniqueInput";
 import { KpiClassificationUpdateInput } from "./KpiClassificationUpdateInput";
 
+@swagger.ApiBearerAuth()
+@common.UseGuards(defaultAuthGuard.DefaultAuthGuard, nestAccessControl.ACGuard)
 export class KpiClassificationControllerBase {
-  constructor(protected readonly service: KpiClassificationService) {}
+  constructor(
+    protected readonly service: KpiClassificationService,
+    protected readonly rolesBuilder: nestAccessControl.RolesBuilder
+  ) {}
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Post()
   @swagger.ApiCreatedResponse({ type: KpiClassification })
+  @nestAccessControl.UseRoles({
+    resource: "KpiClassification",
+    action: "create",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async createKpiClassification(
     @common.Body() data: KpiClassificationCreateInput
   ): Promise<KpiClassification> {
@@ -42,9 +60,18 @@ export class KpiClassificationControllerBase {
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get()
   @swagger.ApiOkResponse({ type: [KpiClassification] })
   @ApiNestedQuery(KpiClassificationFindManyArgs)
+  @nestAccessControl.UseRoles({
+    resource: "KpiClassification",
+    action: "read",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async kpiClassifications(
     @common.Req() request: Request
   ): Promise<KpiClassification[]> {
@@ -61,9 +88,18 @@ export class KpiClassificationControllerBase {
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get("/:id")
   @swagger.ApiOkResponse({ type: KpiClassification })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "KpiClassification",
+    action: "read",
+    possession: "own",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async kpiClassification(
     @common.Param() params: KpiClassificationWhereUniqueInput
   ): Promise<KpiClassification | null> {
@@ -85,9 +121,18 @@ export class KpiClassificationControllerBase {
     return result;
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Patch("/:id")
   @swagger.ApiOkResponse({ type: KpiClassification })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "KpiClassification",
+    action: "update",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async updateKpiClassification(
     @common.Param() params: KpiClassificationWhereUniqueInput,
     @common.Body() data: KpiClassificationUpdateInput
@@ -117,6 +162,14 @@ export class KpiClassificationControllerBase {
   @common.Delete("/:id")
   @swagger.ApiOkResponse({ type: KpiClassification })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "KpiClassification",
+    action: "delete",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async deleteKpiClassification(
     @common.Param() params: KpiClassificationWhereUniqueInput
   ): Promise<KpiClassification | null> {

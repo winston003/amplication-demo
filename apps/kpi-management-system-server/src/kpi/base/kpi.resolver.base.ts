@@ -13,19 +13,35 @@ import * as graphql from "@nestjs/graphql";
 import { GraphQLError } from "graphql";
 import { isRecordNotFoundError } from "../../prisma.util";
 import { MetaQueryPayload } from "../../util/MetaQueryPayload";
+import * as nestAccessControl from "nest-access-control";
+import * as gqlACGuard from "../../auth/gqlAC.guard";
+import { GqlDefaultAuthGuard } from "../../auth/gqlDefaultAuth.guard";
+import * as common from "@nestjs/common";
+import { AclFilterResponseInterceptor } from "../../interceptors/aclFilterResponse.interceptor";
+import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateRequest.interceptor";
 import { Kpi } from "./Kpi";
 import { KpiCountArgs } from "./KpiCountArgs";
-import { KpiFindManyArgs } from "./KpiFindManyArgs";
 import { Query } from "../../query/base/Query";
+import { KpiFindManyArgs } from "./KpiFindManyArgs";
 import { KpiFindUniqueArgs } from "./KpiFindUniqueArgs";
 import { CreateKpiArgs } from "./CreateKpiArgs";
 import { UpdateKpiArgs } from "./UpdateKpiArgs";
 import { DeleteKpiArgs } from "./DeleteKpiArgs";
 import { KpiService } from "../kpi.service";
+@common.UseGuards(GqlDefaultAuthGuard, gqlACGuard.GqlACGuard)
 @graphql.Resolver(() => Kpi)
 export class KpiResolverBase {
-  constructor(protected readonly service: KpiService) {}
+  constructor(
+    protected readonly service: KpiService,
+    protected readonly rolesBuilder: nestAccessControl.RolesBuilder
+  ) {}
 
+  @graphql.Query(() => MetaQueryPayload)
+  @nestAccessControl.UseRoles({
+    resource: "Kpi",
+    action: "read",
+    possession: "any",
+  })
   async _kpisMeta(
     @graphql.Args() args: KpiCountArgs
   ): Promise<MetaQueryPayload> {
@@ -35,12 +51,24 @@ export class KpiResolverBase {
     };
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @graphql.Query(() => [Kpi])
+  @nestAccessControl.UseRoles({
+    resource: "Kpi",
+    action: "read",
+    possession: "any",
+  })
   async kpis(@graphql.Args() args: KpiFindManyArgs): Promise<Kpi[]> {
     return this.service.kpis(args);
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @graphql.Query(() => Kpi, { nullable: true })
+  @nestAccessControl.UseRoles({
+    resource: "Kpi",
+    action: "read",
+    possession: "own",
+  })
   async kpi(@graphql.Args() args: KpiFindUniqueArgs): Promise<Kpi | null> {
     const result = await this.service.kpi(args);
     if (result === null) {
@@ -49,7 +77,13 @@ export class KpiResolverBase {
     return result;
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @graphql.Mutation(() => Kpi)
+  @nestAccessControl.UseRoles({
+    resource: "Kpi",
+    action: "create",
+    possession: "any",
+  })
   async createKpi(@graphql.Args() args: CreateKpiArgs): Promise<Kpi> {
     return await this.service.createKpi({
       ...args,
@@ -57,7 +91,13 @@ export class KpiResolverBase {
     });
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @graphql.Mutation(() => Kpi)
+  @nestAccessControl.UseRoles({
+    resource: "Kpi",
+    action: "update",
+    possession: "any",
+  })
   async updateKpi(@graphql.Args() args: UpdateKpiArgs): Promise<Kpi | null> {
     try {
       return await this.service.updateKpi({
@@ -75,6 +115,11 @@ export class KpiResolverBase {
   }
 
   @graphql.Mutation(() => Kpi)
+  @nestAccessControl.UseRoles({
+    resource: "Kpi",
+    action: "delete",
+    possession: "any",
+  })
   async deleteKpi(@graphql.Args() args: DeleteKpiArgs): Promise<Kpi | null> {
     try {
       return await this.service.deleteKpi(args);

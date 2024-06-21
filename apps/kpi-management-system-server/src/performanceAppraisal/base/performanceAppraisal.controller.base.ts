@@ -16,17 +16,35 @@ import * as errors from "../../errors";
 import { Request } from "express";
 import { plainToClass } from "class-transformer";
 import { ApiNestedQuery } from "../../decorators/api-nested-query.decorator";
+import * as nestAccessControl from "nest-access-control";
+import * as defaultAuthGuard from "../../auth/defaultAuth.guard";
 import { PerformanceAppraisalService } from "../performanceAppraisal.service";
+import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateRequest.interceptor";
+import { AclFilterResponseInterceptor } from "../../interceptors/aclFilterResponse.interceptor";
 import { PerformanceAppraisalCreateInput } from "./PerformanceAppraisalCreateInput";
 import { PerformanceAppraisal } from "./PerformanceAppraisal";
 import { PerformanceAppraisalFindManyArgs } from "./PerformanceAppraisalFindManyArgs";
 import { PerformanceAppraisalWhereUniqueInput } from "./PerformanceAppraisalWhereUniqueInput";
 import { PerformanceAppraisalUpdateInput } from "./PerformanceAppraisalUpdateInput";
 
+@swagger.ApiBearerAuth()
+@common.UseGuards(defaultAuthGuard.DefaultAuthGuard, nestAccessControl.ACGuard)
 export class PerformanceAppraisalControllerBase {
-  constructor(protected readonly service: PerformanceAppraisalService) {}
+  constructor(
+    protected readonly service: PerformanceAppraisalService,
+    protected readonly rolesBuilder: nestAccessControl.RolesBuilder
+  ) {}
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Post()
   @swagger.ApiCreatedResponse({ type: PerformanceAppraisal })
+  @nestAccessControl.UseRoles({
+    resource: "PerformanceAppraisal",
+    action: "create",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async createPerformanceAppraisal(
     @common.Body() data: PerformanceAppraisalCreateInput
   ): Promise<PerformanceAppraisal> {
@@ -46,9 +64,18 @@ export class PerformanceAppraisalControllerBase {
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get()
   @swagger.ApiOkResponse({ type: [PerformanceAppraisal] })
   @ApiNestedQuery(PerformanceAppraisalFindManyArgs)
+  @nestAccessControl.UseRoles({
+    resource: "PerformanceAppraisal",
+    action: "read",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async performanceAppraisals(
     @common.Req() request: Request
   ): Promise<PerformanceAppraisal[]> {
@@ -69,9 +96,18 @@ export class PerformanceAppraisalControllerBase {
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get("/:id")
   @swagger.ApiOkResponse({ type: PerformanceAppraisal })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "PerformanceAppraisal",
+    action: "read",
+    possession: "own",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async performanceAppraisal(
     @common.Param() params: PerformanceAppraisalWhereUniqueInput
   ): Promise<PerformanceAppraisal | null> {
@@ -97,9 +133,18 @@ export class PerformanceAppraisalControllerBase {
     return result;
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Patch("/:id")
   @swagger.ApiOkResponse({ type: PerformanceAppraisal })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "PerformanceAppraisal",
+    action: "update",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async updatePerformanceAppraisal(
     @common.Param() params: PerformanceAppraisalWhereUniqueInput,
     @common.Body() data: PerformanceAppraisalUpdateInput
@@ -133,6 +178,14 @@ export class PerformanceAppraisalControllerBase {
   @common.Delete("/:id")
   @swagger.ApiOkResponse({ type: PerformanceAppraisal })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "PerformanceAppraisal",
+    action: "delete",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async deletePerformanceAppraisal(
     @common.Param() params: PerformanceAppraisalWhereUniqueInput
   ): Promise<PerformanceAppraisal | null> {

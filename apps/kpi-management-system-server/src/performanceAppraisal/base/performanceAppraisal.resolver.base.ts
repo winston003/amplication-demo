@@ -13,19 +13,35 @@ import * as graphql from "@nestjs/graphql";
 import { GraphQLError } from "graphql";
 import { isRecordNotFoundError } from "../../prisma.util";
 import { MetaQueryPayload } from "../../util/MetaQueryPayload";
+import * as nestAccessControl from "nest-access-control";
+import * as gqlACGuard from "../../auth/gqlAC.guard";
+import { GqlDefaultAuthGuard } from "../../auth/gqlDefaultAuth.guard";
+import * as common from "@nestjs/common";
+import { AclFilterResponseInterceptor } from "../../interceptors/aclFilterResponse.interceptor";
+import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateRequest.interceptor";
 import { PerformanceAppraisal } from "./PerformanceAppraisal";
 import { PerformanceAppraisalCountArgs } from "./PerformanceAppraisalCountArgs";
-import { PerformanceAppraisalFindManyArgs } from "./PerformanceAppraisalFindManyArgs";
 import { Query } from "../../query/base/Query";
+import { PerformanceAppraisalFindManyArgs } from "./PerformanceAppraisalFindManyArgs";
 import { PerformanceAppraisalFindUniqueArgs } from "./PerformanceAppraisalFindUniqueArgs";
 import { CreatePerformanceAppraisalArgs } from "./CreatePerformanceAppraisalArgs";
 import { UpdatePerformanceAppraisalArgs } from "./UpdatePerformanceAppraisalArgs";
 import { DeletePerformanceAppraisalArgs } from "./DeletePerformanceAppraisalArgs";
 import { PerformanceAppraisalService } from "../performanceAppraisal.service";
+@common.UseGuards(GqlDefaultAuthGuard, gqlACGuard.GqlACGuard)
 @graphql.Resolver(() => PerformanceAppraisal)
 export class PerformanceAppraisalResolverBase {
-  constructor(protected readonly service: PerformanceAppraisalService) {}
+  constructor(
+    protected readonly service: PerformanceAppraisalService,
+    protected readonly rolesBuilder: nestAccessControl.RolesBuilder
+  ) {}
 
+  @graphql.Query(() => MetaQueryPayload)
+  @nestAccessControl.UseRoles({
+    resource: "PerformanceAppraisal",
+    action: "read",
+    possession: "any",
+  })
   async _performanceAppraisalsMeta(
     @graphql.Args() args: PerformanceAppraisalCountArgs
   ): Promise<MetaQueryPayload> {
@@ -35,14 +51,26 @@ export class PerformanceAppraisalResolverBase {
     };
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @graphql.Query(() => [PerformanceAppraisal])
+  @nestAccessControl.UseRoles({
+    resource: "PerformanceAppraisal",
+    action: "read",
+    possession: "any",
+  })
   async performanceAppraisals(
     @graphql.Args() args: PerformanceAppraisalFindManyArgs
   ): Promise<PerformanceAppraisal[]> {
     return this.service.performanceAppraisals(args);
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @graphql.Query(() => PerformanceAppraisal, { nullable: true })
+  @nestAccessControl.UseRoles({
+    resource: "PerformanceAppraisal",
+    action: "read",
+    possession: "own",
+  })
   async performanceAppraisal(
     @graphql.Args() args: PerformanceAppraisalFindUniqueArgs
   ): Promise<PerformanceAppraisal | null> {
@@ -53,7 +81,13 @@ export class PerformanceAppraisalResolverBase {
     return result;
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @graphql.Mutation(() => PerformanceAppraisal)
+  @nestAccessControl.UseRoles({
+    resource: "PerformanceAppraisal",
+    action: "create",
+    possession: "any",
+  })
   async createPerformanceAppraisal(
     @graphql.Args() args: CreatePerformanceAppraisalArgs
   ): Promise<PerformanceAppraisal> {
@@ -63,7 +97,13 @@ export class PerformanceAppraisalResolverBase {
     });
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @graphql.Mutation(() => PerformanceAppraisal)
+  @nestAccessControl.UseRoles({
+    resource: "PerformanceAppraisal",
+    action: "update",
+    possession: "any",
+  })
   async updatePerformanceAppraisal(
     @graphql.Args() args: UpdatePerformanceAppraisalArgs
   ): Promise<PerformanceAppraisal | null> {
@@ -83,6 +123,11 @@ export class PerformanceAppraisalResolverBase {
   }
 
   @graphql.Mutation(() => PerformanceAppraisal)
+  @nestAccessControl.UseRoles({
+    resource: "PerformanceAppraisal",
+    action: "delete",
+    possession: "any",
+  })
   async deletePerformanceAppraisal(
     @graphql.Args() args: DeletePerformanceAppraisalArgs
   ): Promise<PerformanceAppraisal | null> {
