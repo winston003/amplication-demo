@@ -1,0 +1,112 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DB_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model KpiClassification {
+  createdAt DateTime                    @default(now())
+  id        String                      @id @default(cuid())
+  level     EnumKpiClassificationLevel?
+  name      String?
+  updatedAt DateTime                    @updatedAt
+}
+
+model Kpi {
+  classification String?
+  createdAt      DateTime @default(now())
+  description    String?
+  id             String   @id @default(cuid())
+  name           String?
+  targetValue    Float?
+  updatedAt      DateTime @updatedAt
+  weight         Float?
+}
+
+model Rank {
+  createdAt        DateTime         @default(now())
+  id               String           @id @default(cuid())
+  name             String?
+  rankAdjustments  RankAdjustment[]
+  rankPromotions   RankPromotion[]
+  requirements     String?
+  responsibilities String?
+  updatedAt        DateTime         @updatedAt
+}
+
+model PerformanceAppraisal {
+  applicant         String?
+  createdAt         DateTime                        @default(now())
+  goalAchievement   String?
+  id                String                          @id @default(cuid())
+  reviewComment     String?
+  selfEvaluation    String?
+  status            EnumPerformanceAppraisalStatus?
+  supervisorComment String?
+  updatedAt         DateTime                        @updatedAt
+}
+
+model RankAdjustment {
+  adjustmentReason String?
+  createdAt        DateTime  @default(now())
+  effectiveDate    DateTime?
+  id               String    @id @default(cuid())
+  rank             Rank?     @relation(fields: [rankId], references: [id])
+  rankId           String?
+  updatedAt        DateTime  @updatedAt
+}
+
+model Query {
+  createdAt DateTime            @default(now())
+  details   String?
+  id        String              @id @default(cuid())
+  queryDate DateTime?
+  queryType EnumQueryQueryType?
+  updatedAt DateTime            @updatedAt
+  user      User?               @relation(fields: [userId], references: [id])
+  userId    String?
+}
+
+model RankPromotion {
+  applicant       String?
+  applicationDate DateTime?
+  approvalStatus  EnumRankPromotionApprovalStatus?
+  createdAt       DateTime                         @default(now())
+  id              String                           @id @default(cuid())
+  rank            Rank?                            @relation(fields: [rankId], references: [id])
+  rankId          String?
+  reviewCommittee String?
+  updatedAt       DateTime                         @updatedAt
+}
+
+model User {
+  createdAt DateTime @default(now())
+  email     String?  @unique
+  firstName String?
+  id        String   @id @default(cuid())
+  lastName  String?
+  password  String
+  queries   Query[]
+  roles     Json
+  updatedAt DateTime @updatedAt
+  username  String   @unique
+}
+
+enum EnumKpiClassificationLevel {
+  Option1
+}
+
+enum EnumPerformanceAppraisalStatus {
+  Option1
+}
+
+enum EnumQueryQueryType {
+  Option1
+}
+
+enum EnumRankPromotionApprovalStatus {
+  Option1
+}
