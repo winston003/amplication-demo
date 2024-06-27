@@ -1,0 +1,49 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DB_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model OpenSourceProject {
+  createdAt   DateTime @default(now())
+  description String?
+  id          String   @id @default(cuid())
+  projectName String?
+  projectUrl  String?
+  updatedAt   DateTime @updatedAt
+}
+
+model GitHubLink {
+  createdAt   DateTime @default(now())
+  description String?
+  id          String   @id @default(cuid())
+  repoName    String?
+  repoUrl     String?
+  updatedAt   DateTime @updatedAt
+}
+
+model BlogPost {
+  author    String?
+  content   String?
+  createdAt DateTime @default(now())
+  id        String   @id @default(cuid())
+  title     String?
+  updatedAt DateTime @updatedAt
+}
+
+model User {
+  bio            String?
+  createdAt      DateTime @default(now())
+  email          String?  @unique
+  firstName      String?
+  id             String   @id @default(cuid())
+  lastName       String?
+  password       String
+  profilePicture Json?
+  roles          Json
+  updatedAt      DateTime @updatedAt
+  username       String   @unique
+}
