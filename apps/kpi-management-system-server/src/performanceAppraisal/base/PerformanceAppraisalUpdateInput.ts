@@ -11,7 +11,7 @@ https://docs.amplication.com/how-to/custom-code
   */
 import { InputType, Field } from "@nestjs/graphql";
 import { ApiProperty } from "@nestjs/swagger";
-import { IsString, IsOptional, IsEnum } from "class-validator";
+import { IsString, MaxLength, IsOptional, IsEnum } from "class-validator";
 import { EnumPerformanceAppraisalStatus } from "./EnumPerformanceAppraisalStatus";
 
 @InputType()
@@ -21,6 +21,7 @@ class PerformanceAppraisalUpdateInput {
     type: String,
   })
   @IsString()
+  @MaxLength(1000)
   @IsOptional()
   @Field(() => String, {
     nullable: true,
@@ -32,6 +33,7 @@ class PerformanceAppraisalUpdateInput {
     type: String,
   })
   @IsString()
+  @MaxLength(1000)
   @IsOptional()
   @Field(() => String, {
     nullable: true,
@@ -43,6 +45,7 @@ class PerformanceAppraisalUpdateInput {
     type: String,
   })
   @IsString()
+  @MaxLength(1000)
   @IsOptional()
   @Field(() => String, {
     nullable: true,
@@ -54,6 +57,7 @@ class PerformanceAppraisalUpdateInput {
     type: String,
   })
   @IsString()
+  @MaxLength(1000)
   @IsOptional()
   @Field(() => String, {
     nullable: true,
@@ -76,6 +80,7 @@ class PerformanceAppraisalUpdateInput {
     type: String,
   })
   @IsString()
+  @MaxLength(1000)
   @IsOptional()
   @Field(() => String, {
     nullable: true,
