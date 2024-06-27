@@ -16,6 +16,7 @@ import {
   ValidateNested,
   IsOptional,
   IsString,
+  MaxLength,
   IsDate,
   IsEnum,
 } from "class-validator";
@@ -41,6 +42,7 @@ class ContractPerformanceUpdateInput {
     type: String,
   })
   @IsString()
+  @MaxLength(1000)
   @IsOptional()
   @Field(() => String, {
     nullable: true,

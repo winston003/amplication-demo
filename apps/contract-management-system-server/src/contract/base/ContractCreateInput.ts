@@ -12,7 +12,13 @@ https://docs.amplication.com/how-to/custom-code
 import { InputType, Field } from "@nestjs/graphql";
 import { ApiProperty } from "@nestjs/swagger";
 import { ContractApprovalCreateNestedManyWithoutContractsInput } from "./ContractApprovalCreateNestedManyWithoutContractsInput";
-import { ValidateNested, IsOptional, IsString, IsEnum } from "class-validator";
+import {
+  ValidateNested,
+  IsOptional,
+  IsString,
+  MaxLength,
+  IsEnum,
+} from "class-validator";
 import { Type } from "class-transformer";
 import { ContractPerformanceCreateNestedManyWithoutContractsInput } from "./ContractPerformanceCreateNestedManyWithoutContractsInput";
 import { ContractQueryCreateNestedManyWithoutContractsInput } from "./ContractQueryCreateNestedManyWithoutContractsInput";
@@ -87,6 +93,7 @@ class ContractCreateInput {
     type: String,
   })
   @IsString()
+  @MaxLength(1000)
   @IsOptional()
   @Field(() => String, {
     nullable: true,
@@ -109,6 +116,7 @@ class ContractCreateInput {
     type: String,
   })
   @IsString()
+  @MaxLength(1000)
   @IsOptional()
   @Field(() => String, {
     nullable: true,
@@ -120,6 +128,7 @@ class ContractCreateInput {
     type: String,
   })
   @IsString()
+  @MaxLength(1000)
   @IsOptional()
   @Field(() => String, {
     nullable: true,
@@ -131,6 +140,7 @@ class ContractCreateInput {
     type: String,
   })
   @IsString()
+  @MaxLength(1000)
   @IsOptional()
   @Field(() => String, {
     nullable: true,

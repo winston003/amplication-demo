@@ -13,10 +13,13 @@ import { InputType, Field } from "@nestjs/graphql";
 import { ApiProperty } from "@nestjs/swagger";
 import {
   IsString,
+  MaxLength,
   IsOptional,
   ValidateNested,
   IsDate,
   IsInt,
+  Min,
+  Max,
 } from "class-validator";
 import { ContractWhereUniqueInput } from "../../contract/base/ContractWhereUniqueInput";
 import { Type } from "class-transformer";
@@ -28,6 +31,7 @@ class ContractVersionUpdateInput {
     type: String,
   })
   @IsString()
+  @MaxLength(1000)
   @IsOptional()
   @Field(() => String, {
     nullable: true,
@@ -62,6 +66,8 @@ class ContractVersionUpdateInput {
     type: Number,
   })
   @IsInt()
+  @Min(-999999999)
+  @Max(999999999)
   @IsOptional()
   @Field(() => Number, {
     nullable: true,

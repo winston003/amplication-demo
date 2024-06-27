@@ -17,6 +17,7 @@ import {
   IsOptional,
   IsDate,
   IsString,
+  MaxLength,
   IsEnum,
 } from "class-validator";
 import { Type } from "class-transformer";
@@ -54,6 +55,7 @@ class ContractPerformance {
     type: String,
   })
   @IsString()
+  @MaxLength(1000)
   @IsOptional()
   @Field(() => String, {
     nullable: true,

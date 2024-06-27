@@ -17,6 +17,7 @@ import {
   IsOptional,
   IsDate,
   IsString,
+  MaxLength,
   IsEnum,
 } from "class-validator";
 import { Type } from "class-transformer";
@@ -86,6 +87,7 @@ class Contract {
     type: String,
   })
   @IsString()
+  @MaxLength(1000)
   @IsOptional()
   @Field(() => String, {
     nullable: true,
@@ -116,6 +118,7 @@ class Contract {
     type: String,
   })
   @IsString()
+  @MaxLength(1000)
   @IsOptional()
   @Field(() => String, {
     nullable: true,
@@ -127,6 +130,7 @@ class Contract {
     type: String,
   })
   @IsString()
+  @MaxLength(1000)
   @IsOptional()
   @Field(() => String, {
     nullable: true,
@@ -146,6 +150,7 @@ class Contract {
     type: String,
   })
   @IsString()
+  @MaxLength(1000)
   @IsOptional()
   @Field(() => String, {
     nullable: true,

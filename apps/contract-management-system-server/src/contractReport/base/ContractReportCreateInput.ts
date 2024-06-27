@@ -11,7 +11,13 @@ https://docs.amplication.com/how-to/custom-code
   */
 import { InputType, Field } from "@nestjs/graphql";
 import { ApiProperty } from "@nestjs/swagger";
-import { IsString, IsOptional, IsEnum, IsDate } from "class-validator";
+import {
+  IsString,
+  MaxLength,
+  IsOptional,
+  IsEnum,
+  IsDate,
+} from "class-validator";
 import { EnumContractReportFormat } from "./EnumContractReportFormat";
 import { Type } from "class-transformer";
 
@@ -22,6 +28,7 @@ class ContractReportCreateInput {
     type: String,
   })
   @IsString()
+  @MaxLength(1000)
   @IsOptional()
   @Field(() => String, {
     nullable: true,
@@ -55,6 +62,7 @@ class ContractReportCreateInput {
     type: String,
   })
   @IsString()
+  @MaxLength(1000)
   @IsOptional()
   @Field(() => String, {
     nullable: true,

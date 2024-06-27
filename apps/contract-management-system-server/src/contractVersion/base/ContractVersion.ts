@@ -13,10 +13,13 @@ import { ObjectType, Field } from "@nestjs/graphql";
 import { ApiProperty } from "@nestjs/swagger";
 import {
   IsString,
+  MaxLength,
   IsOptional,
   ValidateNested,
   IsDate,
   IsInt,
+  Min,
+  Max,
 } from "class-validator";
 import { Contract } from "../../contract/base/Contract";
 import { Type } from "class-transformer";
@@ -28,6 +31,7 @@ class ContractVersion {
     type: String,
   })
   @IsString()
+  @MaxLength(1000)
   @IsOptional()
   @Field(() => String, {
     nullable: true,
@@ -83,6 +87,8 @@ class ContractVersion {
     type: Number,
   })
   @IsInt()
+  @Min(-999999999)
+  @Max(999999999)
   @IsOptional()
   @Field(() => Number, {
     nullable: true,
