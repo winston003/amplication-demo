@@ -11,14 +11,19 @@ https://docs.amplication.com/how-to/custom-code
   */
 import { ObjectType, Field } from "@nestjs/graphql";
 import { ApiProperty } from "@nestjs/swagger";
+
 import {
   IsString,
+  MaxLength,
   IsOptional,
   ValidateNested,
   IsDate,
   IsNumber,
+  Min,
+  Max,
   IsEnum,
 } from "class-validator";
+
 import { Agent } from "../../agent/base/Agent";
 import { Type } from "class-transformer";
 import { Appointment } from "../../appointment/base/Appointment";
@@ -31,6 +36,7 @@ class Property {
     type: String,
   })
   @IsString()
+  @MaxLength(1000)
   @IsOptional()
   @Field(() => String, {
     nullable: true,
@@ -76,6 +82,8 @@ class Property {
     type: Number,
   })
   @IsNumber()
+  @Min(-999999999)
+  @Max(999999999)
   @IsOptional()
   @Field(() => Number, {
     nullable: true,

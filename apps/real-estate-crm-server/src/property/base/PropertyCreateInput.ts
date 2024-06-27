@@ -11,13 +11,18 @@ https://docs.amplication.com/how-to/custom-code
   */
 import { InputType, Field } from "@nestjs/graphql";
 import { ApiProperty } from "@nestjs/swagger";
+
 import {
   IsString,
+  MaxLength,
   IsOptional,
   ValidateNested,
   IsNumber,
+  Min,
+  Max,
   IsEnum,
 } from "class-validator";
+
 import { AgentWhereUniqueInput } from "../../agent/base/AgentWhereUniqueInput";
 import { Type } from "class-transformer";
 import { AppointmentCreateNestedManyWithoutPropertiesInput } from "./AppointmentCreateNestedManyWithoutPropertiesInput";
@@ -30,6 +35,7 @@ class PropertyCreateInput {
     type: String,
   })
   @IsString()
+  @MaxLength(1000)
   @IsOptional()
   @Field(() => String, {
     nullable: true,
@@ -65,6 +71,8 @@ class PropertyCreateInput {
     type: Number,
   })
   @IsNumber()
+  @Min(-999999999)
+  @Max(999999999)
   @IsOptional()
   @Field(() => Number, {
     nullable: true,
