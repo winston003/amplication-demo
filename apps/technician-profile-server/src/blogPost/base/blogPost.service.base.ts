@@ -11,6 +11,10 @@ https://docs.amplication.com/how-to/custom-code
   */
 import { PrismaService } from "../../prisma/prisma.service";
 import { Prisma, BlogPost as PrismaBlogPost } from "@prisma/client";
+import { BlogPostWhereUniqueInput } from "./BlogPostWhereUniqueInput";
+import { BlogPost } from "./BlogPost";
+import { BlogPostFindManyArgs } from "./BlogPostFindManyArgs";
+import { BlogPostUpdateInput } from "./BlogPostUpdateInput";
 
 export class BlogPostServiceBase {
   constructor(protected readonly prisma: PrismaService) {}
@@ -43,5 +47,20 @@ export class BlogPostServiceBase {
     args: Prisma.BlogPostDeleteArgs
   ): Promise<PrismaBlogPost> {
     return this.prisma.blogPost.delete(args);
+  }
+  async CreateBlogPost(args: string): Promise<string> {
+    throw new Error("Not implemented");
+  }
+  async DeleteBlogPost(args: BlogPostWhereUniqueInput): Promise<BlogPost> {
+    throw new Error("Not implemented");
+  }
+  async GetAllBlogPosts(args: BlogPostFindManyArgs): Promise<BlogPost[]> {
+    throw new Error("Not implemented");
+  }
+  async GetBlogPostById(args: BlogPostWhereUniqueInput): Promise<BlogPost> {
+    throw new Error("Not implemented");
+  }
+  async UpdateBlogPost(args: BlogPostUpdateInput): Promise<BlogPost> {
+    throw new Error("Not implemented");
   }
 }

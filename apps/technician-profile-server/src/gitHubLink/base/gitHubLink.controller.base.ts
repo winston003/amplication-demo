@@ -16,17 +16,35 @@ import * as errors from "../../errors";
 import { Request } from "express";
 import { plainToClass } from "class-transformer";
 import { ApiNestedQuery } from "../../decorators/api-nested-query.decorator";
+import * as nestAccessControl from "nest-access-control";
+import * as defaultAuthGuard from "../../auth/defaultAuth.guard";
 import { GitHubLinkService } from "../gitHubLink.service";
+import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateRequest.interceptor";
+import { AclFilterResponseInterceptor } from "../../interceptors/aclFilterResponse.interceptor";
 import { GitHubLinkCreateInput } from "./GitHubLinkCreateInput";
 import { GitHubLink } from "./GitHubLink";
 import { GitHubLinkFindManyArgs } from "./GitHubLinkFindManyArgs";
 import { GitHubLinkWhereUniqueInput } from "./GitHubLinkWhereUniqueInput";
 import { GitHubLinkUpdateInput } from "./GitHubLinkUpdateInput";
 
+@swagger.ApiBearerAuth()
+@common.UseGuards(defaultAuthGuard.DefaultAuthGuard, nestAccessControl.ACGuard)
 export class GitHubLinkControllerBase {
-  constructor(protected readonly service: GitHubLinkService) {}
+  constructor(
+    protected readonly service: GitHubLinkService,
+    protected readonly rolesBuilder: nestAccessControl.RolesBuilder
+  ) {}
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Post()
   @swagger.ApiCreatedResponse({ type: GitHubLink })
+  @nestAccessControl.UseRoles({
+    resource: "GitHubLink",
+    action: "create",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async createGitHubLink(
     @common.Body() data: GitHubLinkCreateInput
   ): Promise<GitHubLink> {
@@ -43,9 +61,18 @@ export class GitHubLinkControllerBase {
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get()
   @swagger.ApiOkResponse({ type: [GitHubLink] })
   @ApiNestedQuery(GitHubLinkFindManyArgs)
+  @nestAccessControl.UseRoles({
+    resource: "GitHubLink",
+    action: "read",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async gitHubLinks(@common.Req() request: Request): Promise<GitHubLink[]> {
     const args = plainToClass(GitHubLinkFindManyArgs, request.query);
     return this.service.gitHubLinks({
@@ -61,9 +88,18 @@ export class GitHubLinkControllerBase {
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get("/:id")
   @swagger.ApiOkResponse({ type: GitHubLink })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "GitHubLink",
+    action: "read",
+    possession: "own",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async gitHubLink(
     @common.Param() params: GitHubLinkWhereUniqueInput
   ): Promise<GitHubLink | null> {
@@ -86,9 +122,18 @@ export class GitHubLinkControllerBase {
     return result;
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Patch("/:id")
   @swagger.ApiOkResponse({ type: GitHubLink })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "GitHubLink",
+    action: "update",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async updateGitHubLink(
     @common.Param() params: GitHubLinkWhereUniqueInput,
     @common.Body() data: GitHubLinkUpdateInput
@@ -119,6 +164,14 @@ export class GitHubLinkControllerBase {
   @common.Delete("/:id")
   @swagger.ApiOkResponse({ type: GitHubLink })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "GitHubLink",
+    action: "delete",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async deleteGitHubLink(
     @common.Param() params: GitHubLinkWhereUniqueInput
   ): Promise<GitHubLink | null> {

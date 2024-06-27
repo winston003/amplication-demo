@@ -16,17 +16,35 @@ import * as errors from "../../errors";
 import { Request } from "express";
 import { plainToClass } from "class-transformer";
 import { ApiNestedQuery } from "../../decorators/api-nested-query.decorator";
+import * as nestAccessControl from "nest-access-control";
+import * as defaultAuthGuard from "../../auth/defaultAuth.guard";
 import { OpenSourceProjectService } from "../openSourceProject.service";
+import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateRequest.interceptor";
+import { AclFilterResponseInterceptor } from "../../interceptors/aclFilterResponse.interceptor";
 import { OpenSourceProjectCreateInput } from "./OpenSourceProjectCreateInput";
 import { OpenSourceProject } from "./OpenSourceProject";
 import { OpenSourceProjectFindManyArgs } from "./OpenSourceProjectFindManyArgs";
 import { OpenSourceProjectWhereUniqueInput } from "./OpenSourceProjectWhereUniqueInput";
 import { OpenSourceProjectUpdateInput } from "./OpenSourceProjectUpdateInput";
 
+@swagger.ApiBearerAuth()
+@common.UseGuards(defaultAuthGuard.DefaultAuthGuard, nestAccessControl.ACGuard)
 export class OpenSourceProjectControllerBase {
-  constructor(protected readonly service: OpenSourceProjectService) {}
+  constructor(
+    protected readonly service: OpenSourceProjectService,
+    protected readonly rolesBuilder: nestAccessControl.RolesBuilder
+  ) {}
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Post()
   @swagger.ApiCreatedResponse({ type: OpenSourceProject })
+  @nestAccessControl.UseRoles({
+    resource: "OpenSourceProject",
+    action: "create",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async createOpenSourceProject(
     @common.Body() data: OpenSourceProjectCreateInput
   ): Promise<OpenSourceProject> {
@@ -43,9 +61,18 @@ export class OpenSourceProjectControllerBase {
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get()
   @swagger.ApiOkResponse({ type: [OpenSourceProject] })
   @ApiNestedQuery(OpenSourceProjectFindManyArgs)
+  @nestAccessControl.UseRoles({
+    resource: "OpenSourceProject",
+    action: "read",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async openSourceProjects(
     @common.Req() request: Request
   ): Promise<OpenSourceProject[]> {
@@ -63,9 +90,18 @@ export class OpenSourceProjectControllerBase {
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get("/:id")
   @swagger.ApiOkResponse({ type: OpenSourceProject })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "OpenSourceProject",
+    action: "read",
+    possession: "own",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async openSourceProject(
     @common.Param() params: OpenSourceProjectWhereUniqueInput
   ): Promise<OpenSourceProject | null> {
@@ -88,9 +124,18 @@ export class OpenSourceProjectControllerBase {
     return result;
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Patch("/:id")
   @swagger.ApiOkResponse({ type: OpenSourceProject })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "OpenSourceProject",
+    action: "update",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async updateOpenSourceProject(
     @common.Param() params: OpenSourceProjectWhereUniqueInput,
     @common.Body() data: OpenSourceProjectUpdateInput
@@ -121,6 +166,14 @@ export class OpenSourceProjectControllerBase {
   @common.Delete("/:id")
   @swagger.ApiOkResponse({ type: OpenSourceProject })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "OpenSourceProject",
+    action: "delete",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async deleteOpenSourceProject(
     @common.Param() params: OpenSourceProjectWhereUniqueInput
   ): Promise<OpenSourceProject | null> {

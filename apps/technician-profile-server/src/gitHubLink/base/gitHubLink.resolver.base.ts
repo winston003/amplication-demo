@@ -13,6 +13,12 @@ import * as graphql from "@nestjs/graphql";
 import { GraphQLError } from "graphql";
 import { isRecordNotFoundError } from "../../prisma.util";
 import { MetaQueryPayload } from "../../util/MetaQueryPayload";
+import * as nestAccessControl from "nest-access-control";
+import * as gqlACGuard from "../../auth/gqlAC.guard";
+import { GqlDefaultAuthGuard } from "../../auth/gqlDefaultAuth.guard";
+import * as common from "@nestjs/common";
+import { AclFilterResponseInterceptor } from "../../interceptors/aclFilterResponse.interceptor";
+import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateRequest.interceptor";
 import { GitHubLink } from "./GitHubLink";
 import { GitHubLinkCountArgs } from "./GitHubLinkCountArgs";
 import { GitHubLinkFindManyArgs } from "./GitHubLinkFindManyArgs";
@@ -21,10 +27,20 @@ import { CreateGitHubLinkArgs } from "./CreateGitHubLinkArgs";
 import { UpdateGitHubLinkArgs } from "./UpdateGitHubLinkArgs";
 import { DeleteGitHubLinkArgs } from "./DeleteGitHubLinkArgs";
 import { GitHubLinkService } from "../gitHubLink.service";
+@common.UseGuards(GqlDefaultAuthGuard, gqlACGuard.GqlACGuard)
 @graphql.Resolver(() => GitHubLink)
 export class GitHubLinkResolverBase {
-  constructor(protected readonly service: GitHubLinkService) {}
+  constructor(
+    protected readonly service: GitHubLinkService,
+    protected readonly rolesBuilder: nestAccessControl.RolesBuilder
+  ) {}
 
+  @graphql.Query(() => MetaQueryPayload)
+  @nestAccessControl.UseRoles({
+    resource: "GitHubLink",
+    action: "read",
+    possession: "any",
+  })
   async _gitHubLinksMeta(
     @graphql.Args() args: GitHubLinkCountArgs
   ): Promise<MetaQueryPayload> {
@@ -34,14 +50,26 @@ export class GitHubLinkResolverBase {
     };
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @graphql.Query(() => [GitHubLink])
+  @nestAccessControl.UseRoles({
+    resource: "GitHubLink",
+    action: "read",
+    possession: "any",
+  })
   async gitHubLinks(
     @graphql.Args() args: GitHubLinkFindManyArgs
   ): Promise<GitHubLink[]> {
     return this.service.gitHubLinks(args);
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @graphql.Query(() => GitHubLink, { nullable: true })
+  @nestAccessControl.UseRoles({
+    resource: "GitHubLink",
+    action: "read",
+    possession: "own",
+  })
   async gitHubLink(
     @graphql.Args() args: GitHubLinkFindUniqueArgs
   ): Promise<GitHubLink | null> {
@@ -52,7 +80,13 @@ export class GitHubLinkResolverBase {
     return result;
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @graphql.Mutation(() => GitHubLink)
+  @nestAccessControl.UseRoles({
+    resource: "GitHubLink",
+    action: "create",
+    possession: "any",
+  })
   async createGitHubLink(
     @graphql.Args() args: CreateGitHubLinkArgs
   ): Promise<GitHubLink> {
@@ -62,7 +96,13 @@ export class GitHubLinkResolverBase {
     });
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @graphql.Mutation(() => GitHubLink)
+  @nestAccessControl.UseRoles({
+    resource: "GitHubLink",
+    action: "update",
+    possession: "any",
+  })
   async updateGitHubLink(
     @graphql.Args() args: UpdateGitHubLinkArgs
   ): Promise<GitHubLink | null> {
@@ -82,6 +122,11 @@ export class GitHubLinkResolverBase {
   }
 
   @graphql.Mutation(() => GitHubLink)
+  @nestAccessControl.UseRoles({
+    resource: "GitHubLink",
+    action: "delete",
+    possession: "any",
+  })
   async deleteGitHubLink(
     @graphql.Args() args: DeleteGitHubLinkArgs
   ): Promise<GitHubLink | null> {

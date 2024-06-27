@@ -13,6 +13,12 @@ import * as graphql from "@nestjs/graphql";
 import { GraphQLError } from "graphql";
 import { isRecordNotFoundError } from "../../prisma.util";
 import { MetaQueryPayload } from "../../util/MetaQueryPayload";
+import * as nestAccessControl from "nest-access-control";
+import * as gqlACGuard from "../../auth/gqlAC.guard";
+import { GqlDefaultAuthGuard } from "../../auth/gqlDefaultAuth.guard";
+import * as common from "@nestjs/common";
+import { AclFilterResponseInterceptor } from "../../interceptors/aclFilterResponse.interceptor";
+import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateRequest.interceptor";
 import { OpenSourceProject } from "./OpenSourceProject";
 import { OpenSourceProjectCountArgs } from "./OpenSourceProjectCountArgs";
 import { OpenSourceProjectFindManyArgs } from "./OpenSourceProjectFindManyArgs";
@@ -21,10 +27,20 @@ import { CreateOpenSourceProjectArgs } from "./CreateOpenSourceProjectArgs";
 import { UpdateOpenSourceProjectArgs } from "./UpdateOpenSourceProjectArgs";
 import { DeleteOpenSourceProjectArgs } from "./DeleteOpenSourceProjectArgs";
 import { OpenSourceProjectService } from "../openSourceProject.service";
+@common.UseGuards(GqlDefaultAuthGuard, gqlACGuard.GqlACGuard)
 @graphql.Resolver(() => OpenSourceProject)
 export class OpenSourceProjectResolverBase {
-  constructor(protected readonly service: OpenSourceProjectService) {}
+  constructor(
+    protected readonly service: OpenSourceProjectService,
+    protected readonly rolesBuilder: nestAccessControl.RolesBuilder
+  ) {}
 
+  @graphql.Query(() => MetaQueryPayload)
+  @nestAccessControl.UseRoles({
+    resource: "OpenSourceProject",
+    action: "read",
+    possession: "any",
+  })
   async _openSourceProjectsMeta(
     @graphql.Args() args: OpenSourceProjectCountArgs
   ): Promise<MetaQueryPayload> {
@@ -34,14 +50,26 @@ export class OpenSourceProjectResolverBase {
     };
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @graphql.Query(() => [OpenSourceProject])
+  @nestAccessControl.UseRoles({
+    resource: "OpenSourceProject",
+    action: "read",
+    possession: "any",
+  })
   async openSourceProjects(
     @graphql.Args() args: OpenSourceProjectFindManyArgs
   ): Promise<OpenSourceProject[]> {
     return this.service.openSourceProjects(args);
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @graphql.Query(() => OpenSourceProject, { nullable: true })
+  @nestAccessControl.UseRoles({
+    resource: "OpenSourceProject",
+    action: "read",
+    possession: "own",
+  })
   async openSourceProject(
     @graphql.Args() args: OpenSourceProjectFindUniqueArgs
   ): Promise<OpenSourceProject | null> {
@@ -52,7 +80,13 @@ export class OpenSourceProjectResolverBase {
     return result;
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @graphql.Mutation(() => OpenSourceProject)
+  @nestAccessControl.UseRoles({
+    resource: "OpenSourceProject",
+    action: "create",
+    possession: "any",
+  })
   async createOpenSourceProject(
     @graphql.Args() args: CreateOpenSourceProjectArgs
   ): Promise<OpenSourceProject> {
@@ -62,7 +96,13 @@ export class OpenSourceProjectResolverBase {
     });
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @graphql.Mutation(() => OpenSourceProject)
+  @nestAccessControl.UseRoles({
+    resource: "OpenSourceProject",
+    action: "update",
+    possession: "any",
+  })
   async updateOpenSourceProject(
     @graphql.Args() args: UpdateOpenSourceProjectArgs
   ): Promise<OpenSourceProject | null> {
@@ -82,6 +122,11 @@ export class OpenSourceProjectResolverBase {
   }
 
   @graphql.Mutation(() => OpenSourceProject)
+  @nestAccessControl.UseRoles({
+    resource: "OpenSourceProject",
+    action: "delete",
+    possession: "any",
+  })
   async deleteOpenSourceProject(
     @graphql.Args() args: DeleteOpenSourceProjectArgs
   ): Promise<OpenSourceProject | null> {
